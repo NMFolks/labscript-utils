@@ -6,9 +6,14 @@ from pathlib import Path
 from subprocess import check_output
 from labscript_profile import LABSCRIPT_SUITE_PROFILE, default_labconfig_path
 
+from runmanager import compile_labscript_async
+
+import socket
+
+import argparse
+
 _here = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_PROFILE_CONTENTS = os.path.join(_here, 'default_profile')
-
 
 def make_shared_secret(directory):
     """Create a new zprocess shared secret file in the given directory and return its
@@ -22,6 +27,13 @@ def make_shared_secret(directory):
 
 
 def make_labconfig_file():
+
+    parser = argprase.ArgumentParser()
+
+    parser.add_argument('--name', type = str, help = 'Sets the name of the default experiment.', default = 'example_apparatus')
+
+    args = parser.parse_args()
+    
     source_path = os.path.join(LABSCRIPT_SUITE_PROFILE, 'labconfig', 'example.ini')
     target_path = default_labconfig_path()
     if os.path.exists(target_path):
@@ -48,6 +60,8 @@ def make_labconfig_file():
     )
     config.set('security', 'shared_secret', str(shared_secret_entry))
 
+    config['DEFAULT']['apparatus_name'] = args.name
+    
     with open(target_path, 'w') as f:
         config.write(f)
 
@@ -72,3 +86,32 @@ def create_profile():
             shutil.copy2(src_file, dest_file)
 
     make_labconfig_file()
+
+#Encapsulate the entire process in a function.
+
+def compile_connection_table():
+
+    config = configparser.Configparser()
+    
+    #The path to the user's connection_table.py script.
+
+    script_path = config['paths']['connection_table_py']
+
+    #The path to the user's connection_table folder.
+
+    output_h5_path = config['paths']['connection_table_h5']
+   
+    #Create h5 file.
+
+    runmanager.new_globals_file(output_h5_path)
+
+    def done_callback(success):
+        pass
+
+    #Finally compile.
+
+    runmanager.compile_labscript_async(labscript_file = script_path, run_file = output_h5_path, stream_port = None, done_callback = done_callback)
+
+#Call the function.
+
+compile_connection_table()
