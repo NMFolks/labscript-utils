@@ -6,8 +6,6 @@ from pathlib import Path
 from subprocess import check_output
 from labscript_profile import LABSCRIPT_SUITE_PROFILE, default_labconfig_path
 
-from runmanager import compile_labscript_async
-
 import socket
 
 import argparse
@@ -28,7 +26,7 @@ def make_shared_secret(directory):
 
 def make_labconfig_file():
 
-    parser = argprase.ArgumentParser()
+    parser = argparse.ArgumentParser()
 
     parser.add_argument('--name', type = str, help = 'Sets the name of the default experiment.', default = 'example_apparatus')
 
@@ -59,12 +57,11 @@ def make_labconfig_file():
         '%(labscript_suite)s', shared_secret.relative_to(LABSCRIPT_SUITE_PROFILE)
     )
     config.set('security', 'shared_secret', str(shared_secret_entry))
-
-    config['DEFAULT']['apparatus_name'] = args.name
     
+    config['DEFAULT']['apparatus_name'] = args.name
+
     with open(target_path, 'w') as f:
         config.write(f)
-
 
 def create_profile():
     src = Path(DEFAULT_PROFILE_CONTENTS)
@@ -89,9 +86,11 @@ def create_profile():
 
 #Encapsulate the entire process in a function.
 
+from runmanager import compile_labscript_async
+
 def compile_connection_table():
 
-    config = configparser.Configparser()
+    config = configparser.ConfigParser()
     
     #The path to the user's connection_table.py script.
 
